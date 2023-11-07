@@ -2,6 +2,7 @@ const notes = require('express').Router();
 const path = require('path');
 const fs = require('fs');
 const { readFromFile, readAndAppend, writeToFile } = require('../helpers/fsutils');
+const { v4:uuidv4 } = require('uuid');  
 
 notes.get('/', (req, res) => {
     readFromFile('./db/db.json').then((data) => res.json(JSON.parse(data)));
@@ -15,11 +16,21 @@ notes.post('/', (req, res) => {
     const newNote = {
         title,
         text,
+        id: uuidv4()
     };
     readAndAppend(newNote, './db/db.json');
     res.send('New note added!');
 
 });
-// I want to add a note to my db so I need to do a POST request
+notes.delete('/:id', (req, res) => {
+    const noteId = req.params.id;
+    console.log(noteId);
+    readFromFile('./db/db.json').then((data) => {
+        const parsedData = JSON.parse(data);
+        const newData = parsedData.filter((note) => note.id !== noteId);
+        writeToFile('./db/db.json', newData);
+        res.send('Note deleted!');
+    });
+});
 
 module.exports = notes;
